@@ -3,7 +3,7 @@ from fastapi.encoders import jsonable_encoder
 from typing import List
 
 
-from models import ListModel
+from models import ListModel, ListUpdateModel
 
 router = APIRouter()
 
@@ -36,5 +36,21 @@ def delete_list(id: str, request: Request, response: Response):
 
 # # getting one element from the list
 
-# @router.put("/",response_description="update the item in list")
-# def update_item(id: str, request: Request, response: Response):
+@router.put("/",response_description="update the item in list", response_model=ListModel)
+def update_item(id: str, request: Request, list: ListUpdateModel = Body(...)):
+    # print("update list route", list.dict())  # {'title': 'string', 'description': 'string'}
+    # update a single document
+    update_result = request.app.database["lists"].update_one({"_id": id }, {"$set": {"title": list.title, "description" : list.description} })
+    # print("update result ",update_result.modified_count)
+
+    if update_result.modified_count == 0:
+            raise HTTPException(status_code=status.HTTP_304_NOT_MODIFIED, detail=f"Item with ID {id} has not been modified")
+    
+
+    if (
+        updated_list_item := request.app.database["lists"].find_one({"_id": id})
+    ) is not None:
+        return updated_list_item
+
+    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail=f"ListItem with ID {id} not found")
+    

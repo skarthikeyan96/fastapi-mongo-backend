@@ -2,6 +2,8 @@ from fastapi import FastAPI
 from dotenv import dotenv_values
 from pymongo import MongoClient
 
+from routes import router as list_router
+
 config = dotenv_values(".env")
 
 app = FastAPI()
@@ -19,3 +21,5 @@ def startup_db_client():
 @app.on_event("shutdown")
 def shutdown_db_client():
     app.mongodb_client.close()
+
+app.include_router(list_router, tags=["list"], prefix="/list")

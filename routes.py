@@ -31,7 +31,7 @@ def delete_list(id: str, request: Request, response: Response):
     if delete_result.deleted_count == 1:
         response.status_code = status.HTTP_204_NO_CONTENT
         return response
-    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail = "Book with {id} not found")
+    raise HTTPException(status_code=status.HTTP_404_NOT_FOUND, detail = "Item with {id} not found")
 
 
 # # getting one element from the list
@@ -40,7 +40,15 @@ def delete_list(id: str, request: Request, response: Response):
 def update_item(id: str, request: Request, list: ListUpdateModel = Body(...)):
     # print("update list route", list.dict())  # {'title': 'string', 'description': 'string'}
     # update a single document
-    update_result = request.app.database["lists"].update_one({"_id": id }, {"$set": {"title": list.title, "description" : list.description} })
+    # list = {k: v for k, v in list.dict().items() if v is not None}
+    listItems = {}
+    for k,v in list.dict().items():
+        if v is not None:
+            listItems = {k:v}
+    
+    print(listItems)
+    # if list.title | list.description:
+    update_result = request.app.database["lists"].update_one({"_id": id }, {"$set": listItems })
     # print("update result ",update_result.modified_count)
 
     if update_result.modified_count == 0:
